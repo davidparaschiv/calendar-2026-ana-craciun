@@ -23,3 +23,12 @@ export function doorBounds(day) {
   const offset=row === 7 ? 46 : 0;
   return { x:24 + col*88 + offset, y:552 + row*112, width:78, height:100 };
 }
+
+// Keep the design in 390 logical units, but draw enough pixels for the display.
+export function renderMetrics(cssWidth, devicePixelRatio = 1) {
+  const width = Number.isFinite(cssWidth) && cssWidth > 0 ? cssWidth : 390;
+  const density = Number.isFinite(devicePixelRatio) ? Math.min(3, Math.max(2, devicePixelRatio)) : 2;
+  const pixelWidth = Math.ceil(width * density);
+  const zoom = pixelWidth / 390;
+  return { width:pixelWidth, height:Math.ceil(1540 * zoom), zoom, textResolution:Math.max(2, Math.ceil(zoom)) };
+}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readdir } from 'node:fs/promises';
-import { calendarDate, isUnlocked, readOpened, doorBounds } from '../calendar.js';
+import { calendarDate, isUnlocked, readOpened, doorBounds, renderMetrics } from '../calendar.js';
 import { memories } from '../memories.js';
 
 test('future dates stay closed; current and past dates open',()=> {
@@ -51,4 +51,18 @@ test('the application interface and descriptions have no Romanian diacritics',as
   const content=await readFile(new URL('../'+file,import.meta.url),'utf8');
   assert.doesNotMatch(content,/[ăâîșțşţĂÂÎȘȚŞŢ]/,file);
  }
+});
+
+
+test('rendering matches mobile and desktop pixel density without changing the layout',()=> {
+ for(const [width,density] of [[320,2],[375,3],[390,3],[430,3],[480,1],[480,2]]) {
+  const result=renderMetrics(width,density);
+  assert.equal(result.width,Math.ceil(width*Math.max(2,density)));
+  assert.ok(result.height>=1540*result.zoom);
+  assert.ok(result.height-1540*result.zoom<1);
+  assert.equal(result.zoom,result.width/390);
+  assert.ok(result.textResolution>=result.zoom);
+ }
+ assert.equal(renderMetrics(480,4).width,1440);
+ assert.equal(renderMetrics(0,NaN).width,780);
 });

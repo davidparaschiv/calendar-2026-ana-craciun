@@ -1,8 +1,10 @@
 import { memories } from './memories.js';
 import { questions, isCorrectAnswer, WRONG_ANSWER } from './quiz.js';
-import { YEAR, calendarDate, isUnlocked, isToday, readOpened, doorBounds } from './calendar.js';
+import { YEAR, calendarDate, isUnlocked, isToday, readOpened, doorBounds, renderMetrics } from './calendar.js?v=2';
 
 const $ = id => document.getElementById(id);
+let rendering = renderMetrics($('game').getBoundingClientRect().width, window.devicePixelRatio);
+let game;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let storage;
 try { storage = window.localStorage; } catch { storage = { getItem:()=>null, setItem:()=>{} }; }
@@ -154,9 +156,10 @@ reducedMotion.addEventListener('change',event=> { if(event.matches) { snowEnable
 
 class AdventScene extends Phaser.Scene {
   constructor() { super('Advent'); }
-  preload() { this.load.svg('christmas','assets/christmas.svg'); }
+  preload() { this.load.svg('christmas','assets/christmas.svg',{width:1560,height:740}); }
   create() {
     scene=this;
+    this.cameras.main.setOrigin(0,0).setZoom(rendering.zoom);
     this.ui=this.add.container(0,0);
     this.redraw();
     this.flakes = Array.from({length:42},(_,i)=> {
@@ -171,7 +174,7 @@ class AdventScene extends Phaser.Scene {
     $('loading').remove();
   }
   text(x,y,value,size=12,color='#86243b',serif=false) {
-    const t=this.add.text(x,y,value,{fontFamily:serif?'Georgia, serif':'Arial, sans-serif',fontSize:`${size}px`,color,align:'center',lineSpacing:7,resolution:2}).setOrigin(.5,0);
+    const t=this.add.text(x,y,value,{fontFamily:serif?'Georgia, serif':'Arial, sans-serif',fontSize:`${size}px`,color,align:'center',lineSpacing:7,resolution:rendering.textResolution}).setOrigin(.5,0);
     this.ui.add(t);return t;
   }
   redraw() {
@@ -187,7 +190,7 @@ class AdventScene extends Phaser.Scene {
     this.text(73,28,'PENTRU ANA',10,'#fff1ec').setLetterSpacing(2);
     this.text(195,112,'Un decembrie\ncu noi.',43,'#fffaf6',true);
     this.text(195,228,'31 de zile. 31 de amintiri. O singura iubire.',11,'#f4d8df');
-    this.ui.add(this.add.image(195,313,'christmas'));
+    this.ui.add(this.add.image(195,313,'christmas').setDisplaySize(390,185));
     this.text(195,409,'DECEMBRIE 2026',10,'#a91832').setLetterSpacing(3);
     this.text(195,433,'Mici usi, amintiri mari.',26,'#86243b',true);
     const d=calendarDate();
@@ -208,7 +211,7 @@ class AdventScene extends Phaser.Scene {
     const fill=seen?0xe6f1f5:blue?0xcfe7f3:white?0xfffaf6:day%3===0?0xc33b50:0xa91832;
     const ink=seen||blue||white?'#94253d':'#fff8f0';
     const bg=this.rexUI.add.roundRectangle(0,0,0,0,11,fill).setStrokeStyle(today?2:1,today?0x79bee3:white?0xe2c8cd:fill);
-    const text=this.add.text(0,0,fmt(day),{fontFamily:'Georgia, serif',fontSize:'29px',color:ink,resolution:2});
+    const text=this.add.text(0,0,fmt(day),{fontFamily:'Georgia, serif',fontSize:'29px',color:ink,resolution:rendering.textResolution});
     const card=this.rexUI.add.label({x:b.x+b.width/2,y:b.y+b.height/2,width:b.width,height:b.height,background:bg,text,align:'center',space:{top:0,bottom:20}}).layout();
     this.ui.add(card);
     const graphics=this.add.graphics();this.ui.add(graphics);
@@ -228,7 +231,7 @@ class AdventScene extends Phaser.Scene {
     const b=doorBounds(day);
     const toast=this.add.container(195,b.y+50).setDepth(30);
     const back=this.rexUI.add.roundRectangle(0,0,218,42,12,0x682034,.98);
-    const text=this.add.text(0,0,`Se deschide pe ${day} decembrie`,{fontFamily:'Arial',fontSize:'12px',color:'#fffaf6',resolution:2}).setOrigin(.5);
+    const text=this.add.text(0,0,`Se deschide pe ${day} decembrie`,{fontFamily:'Arial',fontSize:'12px',color:'#fffaf6',resolution:rendering.textResolution}).setOrigin(.5);
     toast.add([back,text]);this.time.delayedCall(1800,()=>toast.destroy());
   }
   update(time,delta) {
@@ -239,8 +242,20 @@ class AdventScene extends Phaser.Scene {
 }
 buildControls();updateSnowButton();
 try {
-  new Phaser.Game({type:Phaser.CANVAS,parent:'game',width:390,height:1540,backgroundColor:'#fffaf6',transparent:false,render:{antialias:true},fps:{target:30},input:{touch:{capture:false},mouse:{preventDefaultWheel:false}},scale:{mode:Phaser.Scale.NONE,autoCenter:Phaser.Scale.NO_CENTER},plugins:{scene:[{key:'rexUI',plugin:rexuiplugin,mapping:'rexUI'}]},scene:AdventScene});
+  game = new Phaser.Game({type:Phaser.CANVAS,parent:'game',width:rendering.width,height:rendering.height,backgroundColor:'#fffaf6',transparent:false,render:{antialias:true},fps:{target:30},input:{touch:{capture:false},mouse:{preventDefaultWheel:false}},scale:{mode:Phaser.Scale.NONE,autoCenter:Phaser.Scale.NO_CENTER},plugins:{scene:[{key:'rexUI',plugin:rexuiplugin,mapping:'rexUI'}]},scene:AdventScene});
 } catch(error) { if($('loading')) $('loading').textContent='Calendarul nu s-a incarcat. Reincarca pagina pentru a incerca din nou.'; console.error(error); }
+function resizeRenderer() {
+  const next = renderMetrics($('game').getBoundingClientRect().width, window.devicePixelRatio);
+  if (!game || (next.width === rendering.width && next.height === rendering.height)) return;
+  rendering = next;
+  game.scale.resize(next.width,next.height);
+  if (scene?.ui) {
+    scene.cameras.main.setOrigin(0,0).setZoom(next.zoom);
+    scene.redraw();
+  }
+}
+new ResizeObserver(resizeRenderer).observe($('game'));
+window.addEventListener('resize',resizeRenderer);
 refreshDate();
 setInterval(refreshDate,15000);
 window.addEventListener('focus',refreshDate);

@@ -21,6 +21,7 @@ Deschide http://localhost:4173. Pentru telefon, conecteaza-l la aceeasi retea si
 - Deschiderea roteste usa lent la 180° si o mareste inainte de afisarea amintirii. Preferinta sistemului pentru miscare redusa este respectata.
 - Calendarul retine pe dispozitiv amintirile deschise. Reincarcarea nu schimba ordinea si nu deblocheaza zile viitoare.
 - Zilele 2, 6, 15 si 17 cer un raspuns corect inainte de afisarea pozei si a descrierii. Intrebarile sunt, in ordine: semnul de la Dumnezeu, benzinaria, tortul preferat, masajul. Verificarea ignora literele mari si diacriticele, accepta cuvantul cerut in interiorul raspunsului si permite incercari nelimitate. Dupa rezolvare, amintirea poate fi revazuta in aceeasi sesiune fara repetarea intrebarii.
+- Calendarul este randat la densitatea ecranului (pana la 3x), cu text si ilustratii la rezolutie marita. Pe mobil ocupa latimea ecranului; pe desktop ramane centrat, cu fundal de iarna pe laterale.
 - Butonul de ninsoare opreste sau porneste fulgii bleu.
 - Calendarul are butoane pentru tastatura si cititoare de ecran. Popupul se inchide si cu Escape.
 
