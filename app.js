@@ -1,6 +1,6 @@
 import { memories } from './memories.js';
 import { questions, isCorrectAnswer, WRONG_ANSWER } from './quiz.js';
-import { YEAR, calendarDate, isUnlocked, isToday, readOpened, doorBounds, renderMetrics } from './calendar.js?v=2';
+import { YEAR, calendarDate, isUnlocked, isToday, readOpened, doorBounds, renderMetrics, localPreviewEnabled } from './calendar.js?v=3';
 
 const $ = id => document.getElementById(id);
 let rendering = renderMetrics($('game').getBoundingClientRect().width, window.devicePixelRatio);
@@ -8,7 +8,10 @@ let game;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let storage;
 try { storage = window.localStorage; } catch { storage = { getItem:()=>null, setItem:()=>{} }; }
-const opened = readOpened(storage);
+const previewMode = localPreviewEnabled(window.location);
+const openedKey = previewMode ? 'advent-2026-preview-opened' : 'advent-2026-opened';
+const opened = readOpened(storage, openedKey);
+const canOpenDay = day => (previewMode && memories.some(memory => memory.day === day)) || isUnlocked(day);
 let snowEnabled = !reducedMotion.matches;
 let scene;
 let busy = false;
@@ -36,7 +39,7 @@ function buildControls() {
 }
 function refreshControls() {
   for (const [day, button] of buttons) {
-    const unlocked = isUnlocked(day);
+    const unlocked = canOpenDay(day);
     button.setAttribute('aria-disabled', String(!unlocked));
     button.setAttribute('aria-label', `${day} decembrie ${YEAR}. ${!unlocked ? 'Inca inchis. Se deschide pe '+day+' decembrie.' : opened.has(day) ? 'Amintire deschisa. Revede-o.' : 'Deschide amintirea.'}`);
   }
@@ -52,7 +55,7 @@ function refreshDate() {
 
 async function openMemory(memory, button) {
   // Recheck the actual date at the moment of opening, including after midnight.
-  if (!isUnlocked(memory.day)) {
+  if (!canOpenDay(memory.day)) {
     announce(`Putina rabdare! Aceasta amintire se deschide pe ${memory.day} decembrie ${YEAR}.`);
     scene?.lockedFeedback(memory.day);
     return;
@@ -98,7 +101,7 @@ async function openMemory(memory, button) {
       pendingAnimation = null;
     }
     // The date can change while the animation runs, so check again.
-    if (!isUnlocked(memory.day)) return;
+    if (!canOpenDay(memory.day)) return;
     $('memory-dialog').showModal();
     document.body.classList.add('modal-open');
     if (!reducedMotion.matches) $('memory-dialog').animate([{opacity:0,transform:'scale(.95)'},{opacity:1,transform:'scale(1)'}],{duration:230,easing:'ease-out'});
@@ -108,12 +111,12 @@ async function openMemory(memory, button) {
 }
 function markOpened(day) {
   opened.add(day);
-  try { storage.setItem('advent-2026-opened',JSON.stringify([...opened])); } catch { /* Storage is optional. */ }
+  try { storage.setItem(openedKey,JSON.stringify([...opened])); } catch { /* Storage is optional. */ }
   refreshControls();
   scene?.redraw();
 }
 function revealMemory(memory) {
-  if (!isUnlocked(memory.day)) return;
+  if (!canOpenDay(memory.day)) return;
   $('quiz-form').hidden = true;
   $('memory-content').hidden = false;
   document.querySelector('.eyebrow').textContent = 'O AMINTIRE DOAR PENTRU TINE';
@@ -124,7 +127,7 @@ function revealMemory(memory) {
 }
 $('quiz-form').addEventListener('submit', event => {
   event.preventDefault();
-  if (!activeMemory || !isUnlocked(activeMemory.day)) { closeMemory(); return; }
+  if (!activeMemory || !canOpenDay(activeMemory.day)) { closeMemory(); return; }
   if (!isCorrectAnswer(activeMemory.day, $('quiz-answer').value)) {
     $('quiz-feedback').textContent = WRONG_ANSWER;
     $('quiz-answer').setAttribute('aria-invalid','true');
@@ -194,9 +197,9 @@ class AdventScene extends Phaser.Scene {
     this.text(195,409,'DECEMBRIE 2026',10,'#a91832').setLetterSpacing(3);
     this.text(195,433,'Mici usi, amintiri mari.',26,'#86243b',true);
     const d=calendarDate();
-    const status = d.year<YEAR || (d.year===YEAR && d.month<12) ? 'Povestea noastra incepe pe 1 decembrie.' : d.year===YEAR && d.month===12 ? 'Deschide ziua de azi. Pastreaza magia de maine.' : 'Toate amintirile noastre te asteapta aici.';
+    const status = previewMode ? 'PREVIZUALIZARE LOCALA · Toate zilele sunt deschise.' : d.year<YEAR || (d.year===YEAR && d.month<12) ? 'Povestea noastra incepe pe 1 decembrie.' : d.year===YEAR && d.month===12 ? 'Deschide ziua de azi. Pastreaza magia de maine.' : 'Toate amintirile noastre te asteapta aici.';
     this.text(195,474,status,11,'#a07179');
-    const count=[...opened].filter(day=>isUnlocked(day)).length;
+    const count=[...opened].filter(day=>canOpenDay(day)).length;
     this.text(195,503,`${count} / 31 amintiri descoperite`,10,'#a07179');
     g.fillStyle(0xf0e3e2).fillRoundedRect(125,526,140,3,2);
     if(count)g.fillStyle(palette.red).fillRoundedRect(125,526,140*count/31,3,2);
@@ -205,7 +208,7 @@ class AdventScene extends Phaser.Scene {
     this.text(195,1512,'FACUT CU DRAG, DE BEBE  ·  ♥',8,'#a07179').setLetterSpacing(1.6);
   }
   drawDoor(memory) {
-    const day=memory.day,b=doorBounds(day),unlocked=isUnlocked(day),seen=opened.has(day)&&unlocked,today=isToday(day);
+    const day=memory.day,b=doorBounds(day),unlocked=canOpenDay(day),seen=opened.has(day)&&unlocked,today=isToday(day);
     const blue=day%7===0;
     const white=day%4===2;
     const fill=seen?0xe6f1f5:blue?0xcfe7f3:white?0xfffaf6:day%3===0?0xc33b50:0xa91832;

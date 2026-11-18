@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readdir } from 'node:fs/promises';
-import { calendarDate, isUnlocked, readOpened, doorBounds, renderMetrics } from '../calendar.js';
+import { calendarDate, isUnlocked, readOpened, doorBounds, renderMetrics, localPreviewEnabled } from '../calendar.js';
 import { memories } from '../memories.js';
 
 test('future dates stay closed; current and past dates open',()=> {
@@ -65,4 +65,21 @@ test('rendering matches mobile and desktop pixel density without changing the la
  }
  assert.equal(renderMetrics(480,4).width,1440);
  assert.equal(renderMetrics(0,NaN).width,780);
+});
+
+
+test('preview is automatic only on loopback hosts and supports preview=0',()=> {
+ for(const hostname of ['localhost','127.0.0.1','[::1]']) {
+  for(const search of ['','?preview=1']) assert.equal(localPreviewEnabled({hostname,search}),true);
+  assert.equal(localPreviewEnabled({hostname,search:'?preview=0'}),false);
+ }
+ for(const hostname of ['davidparaschiv.github.io','example.com','localhost.example.com','192.168.1.10']) {
+  assert.equal(localPreviewEnabled({hostname,search:'?preview=1'}),false);
+ }
+});
+
+test('preview progress is read from its own storage key',()=> {
+ const storage={getItem:key=>key==='advent-2026-preview-opened'?'[31]':'[1]'};
+ assert.deepEqual([...readOpened(storage)],[1]);
+ assert.deepEqual([...readOpened(storage,'advent-2026-preview-opened')],[31]);
 });

@@ -14,8 +14,8 @@ export function isToday(day, now = new Date()) {
   const date = calendarDate(now);
   return date.year === YEAR && date.month === 12 && date.day === day;
 }
-export function readOpened(storage) {
-  try { const value=JSON.parse(storage.getItem('advent-2026-opened') || '[]'); return new Set(Array.isArray(value) ? value.filter(d => Number.isInteger(d) && d>=1 && d<=31) : []); }
+export function readOpened(storage, key = 'advent-2026-opened') {
+  try { const value=JSON.parse(storage.getItem(key) || '[]'); return new Set(Array.isArray(value) ? value.filter(d => Number.isInteger(d) && d>=1 && d<=31) : []); }
   catch { return new Set(); }
 }
 export function doorBounds(day) {
@@ -31,4 +31,10 @@ export function renderMetrics(cssWidth, devicePixelRatio = 1) {
   const pixelWidth = Math.ceil(width * density);
   const zoom = pixelWidth / 390;
   return { width:pixelWidth, height:Math.ceil(1540 * zoom), zoom, textResolution:Math.max(2, Math.ceil(zoom)) };
+}
+
+// Preview is restricted to loopback hosts; preview=0 opts back into real dates.
+export function localPreviewEnabled(location) {
+  return ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
+    && new URLSearchParams(location.search).get('preview') !== '0';
 }

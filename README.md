@@ -12,6 +12,14 @@ npm start
 
 Deschide http://localhost:4173. Pentru telefon, conecteaza-l la aceeasi retea si foloseste adresa locala a calculatorului cu portul 4173. Site-ul trebuie servit prin HTTP; modulele JavaScript nu se incarca prin deschiderea directa a fisierului HTML.
 
+## Previzualizare locala: toate zilele deschise
+
+Porneste site-ul cu `npm start`, apoi deschide:
+
+http://localhost:4173/
+
+Previzualizarea se activeaza automat numai pe `localhost`, `127.0.0.1` sau `[::1]`. Permite deschiderea tuturor celor 31 de zile, pastrand intrebarile si animatiile. Progresul acestei previzualizari este separat de progresul normal. Adauga `?preview=0` pentru a testa blocarea dupa data. Pe GitHub Pages, parametrul nu deblocheaza nicio zi.
+
 ## Calendar
 
 - Decembrie **2026**, ora Romaniei (`Europe/Bucharest`).
