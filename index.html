@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#a91832">
+  <meta name="description" content="Pentru Ana. Un calendar de decembrie cu 31 de amintiri si putina magie de Craciun.">
+  <title>Un decembrie cu noi · Pentru Ana</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=4">
+  <script defer src="vendor/phaser.min.js"></script>
+  <script defer src="vendor/rexuiplugin.min.js"></script>
+  <script type="module" src="app.js?v=4"></script>
+</head>
+<body>
+  <main id="advent" aria-label="Calendar de amintiri pentru Ana, decembrie 2026">
+    <h1 class="sr-only">Un decembrie cu noi. Calendar pentru Ana, decembrie 2026.</h1>
+    <div id="game" aria-hidden="true"></div>
+    <div id="controls" aria-label="Zilele calendarului"></div>
+    <button id="snow-toggle" class="snow-toggle" aria-label="Opreste ninsoarea" aria-pressed="true">❄ <span>Ninsoare</span></button>
+    <p id="loading" role="status">Se pregateste putina magie…</p>
+    <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
+  </main>
+  <dialog id="memory-dialog" aria-labelledby="memory-title">
+    <div class="popup-card">
+      <div class="popup-top"><span class="eyebrow">O AMINTIRE DOAR PENTRU TINE</span><button id="close-dialog" class="round-button" aria-label="Inchide amintirea">×</button></div>
+      <h2 id="memory-title"></h2>
+      <form id="quiz-form" hidden>
+        <div class="quiz-star" aria-hidden="true">✦</div>
+        <p class="quiz-intro">O mica intrebare din povestea noastra…</p>
+        <p id="quiz-question"></p>
+        <label for="quiz-answer">Raspunsul tau</label>
+        <input id="quiz-answer" type="text" autocomplete="off" placeholder="Scrie aici, Mami…" aria-describedby="quiz-feedback" required>
+        <p id="quiz-feedback" role="status" aria-live="polite"></p>
+        <button class="answer-button" type="submit">Deschide amintirea <span aria-hidden="true">♥</span></button>
+        <p class="quiz-note">Poti incerca de cate ori vrei.</p>
+      </form>
+      <div id="memory-content" hidden>
+      <div class="photo-frame"><img id="memory-photo" alt="" decoding="async"><p id="photo-error" hidden>Poza nu s-a incarcat. <button id="retry-photo">Incearca din nou</button></p></div>
+      <p id="memory-description"></p>
+      </div>
+      <div class="popup-bottom"><span>Cu drag, Bebe <span aria-hidden="true">♥</span></span><button id="back-calendar">Inapoi la calendar <span aria-hidden="true">↗</span></button></div>
+    </div>
+  </dialog>
+  <noscript>Activeaza JavaScript pentru a deschide calendarul de Craciun.</noscript>
+</body>
+</html>
