@@ -85,7 +85,14 @@ async function openMemory(memory, button) {
       const bounds = button.getBoundingClientRect();
       const door = document.createElement('div');
       door.className = 'flip-door';
-      door.textContent = fmt(memory.day);
+      door.setAttribute('aria-hidden','true');
+      const front = document.createElement('div');
+      front.className = 'flip-door-face flip-door-front';
+      front.textContent = fmt(memory.day);
+      const back = document.createElement('div');
+      back.className = 'flip-door-face flip-door-back';
+      back.textContent = '❄';
+      door.append(front, back);
       Object.assign(door.style, {left:`${bounds.left}px`,top:`${bounds.top}px`,width:`${bounds.width}px`,height:`${bounds.height}px`});
       document.body.append(door);
       const targetWidth = Math.min(440,innerWidth-28);
